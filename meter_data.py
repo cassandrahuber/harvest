@@ -35,3 +35,4 @@ def get_csv_paths(base_path):
                      and not f.startswitch('.')
                      ])
 
+    return csv_paths, meter_name
