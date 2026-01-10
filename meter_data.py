@@ -36,3 +36,36 @@ def get_csv_paths(base_path):
                      ])
 
     return csv_paths, meter_name
+
+def load_meter_dfs(basepath):
+    """
+    """
+    csv_paths = get_csv_paths(basepath)
+
+    meters_df = []
+
+    for csv in csv_paths:
+        df = pd.read_csv(csv, encoding='utf-8')
+
+        df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+
+        # error in scripts, total_watt_hour is actually total kwh
+        df.rename(columns={'total_watt_hour', 'kwh'}, inplace=True)
+
+        # rename columns, some meters have different label but they are synonymous
+        if '3_phase_positive_real_energy_used' in df.colums:
+            df.rename(columns = {
+                '3_phase_positive_real_energy_used': 'kwh',
+                '3_phase_real_power': '3_phase_watt_total'
+            }, inplace=True)
+
+        # reorder columns
+        df = df[['datetime, kwh, 3_phase_watt_total']]
+        
+        # add meter's name column
+        df.insert(1, 'meter_name', meter_name)
+        
+        meters_df.append(df)
+        
+    return meters_df
+
