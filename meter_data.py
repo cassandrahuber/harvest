@@ -119,6 +119,15 @@ def concat_meter_dfs(meter_dfs):
         
 def process_kwh(df):
     """
+    Interpolate kwh readings to exact 15 minute intervals. Contains boolean 'interpolated'
+    column to indicate if the row was interpolated or not, and boolean 'is_exact' column
+    to indicate if row is at an exact 15 minute interval.
+
+    Parameters:
+        df (dataframe): Dataframe containing meter data with kwh readings.
+    
+    Returns:
+        dataframe: Dataframe with interpolated kwh readings at exact 15 minute intervals.
     """
     # drop the 3_phase_watt_total column as its not needed for kwh interpolation
     df.drop('3_phase_watt_total', axis=1, inplace=True)
@@ -159,12 +168,14 @@ def process_kwh(df):
                     time_after = after.iloc[0]
 
                     # calculate the estimated kwh
-                    # get the slode to 4 decimal places
+                    # get the slope to 4 decimal places
                     reading_diff = time_after['kwh'] - time_before['kwh']
 
                     if reading_diff == 0:
+                        # if no change in reading, use the before reading
                         estimated_kwh = time_before['kwh']
                     else:
+                        # calculate slope
                         time_diff = (time_after['datetime'] - time_before['datetime']).total_seconds()
                         slope = round(reading_diff / time_diff, 4)
                         sec_before_interval = (interval - time_before['datetime']).total_seconds()
@@ -183,6 +194,7 @@ def process_kwh(df):
 
         # add this meter's interpolated rows to the overall list
         all_interpolated_rows.extend(interpolated_rows)
+        #all_interpolated_rows.append(interpolated_rows)
 
     # combine interpolated data with dataframe
     if all_interpolated_rows:
@@ -195,5 +207,21 @@ def process_kwh(df):
 
     return df
 
+def duplicate_check(df):
+    """
+    Check for duplicate rows in the dataframe and print them.
 
+    Parameters:
+        df (dataframe): The dataframe to check for duplicates.
+    """
+    print(df[df.duplicated(keep=False)])
 
+def meter_list(csv):
+    """
+    Print the list of unique meter names in the CSV file.
+    
+    Parameters:
+        csv (str): Path to the CSV file.
+    """
+    df = pd.read_csv(csv, encoding='utf-8')
+    print(df['meter_name'].unique())
