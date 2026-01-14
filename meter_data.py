@@ -126,5 +126,74 @@ def process_kwh(df):
     # convert datatetime column to a datetime type
     df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d %H:%M:%S')
         
-    return meters_df
+    # create column that contains the closest interval for each timestamp (contains ymd hms, using timedelta)
+    df['interval_15min'] = df['datetime'].dt.round('15min')
+
+    # create column that contains the offset in seconds from the closest interval for each timestamp
+    # - is if its before it and + is if its after
+    df['interval_offset'] = (df['datetime'] - df['interval_15min']).dt.total_seconds()
+
+    # create new column with true if an exact interval and false if not
+    df['is_exact'] = df['datetime'].eq(df['interval_15min'])
+
+    df['interpolated'] = False
+    all_interpolated_rows = []
+
+    #process each meter separately
+    for meter_name, meter_group in df.groupby('meter_name'):
+        interpolated_rows = []
+
+        # interval = the 15min bucket val, group = all rows in that bucket
+        for interval, group in meter_group.groupby('interval_15min'):
+            # only select rows in the group with is_exact == True
+            exact = group[group['is_exact']]
+
+            if exact.empty:
+                before = group[group['interval_offset'] <= 0]
+                after = group[group['interval_offset'] >= 0]
+
+                # check if there are empties
+                if not before.empty and not after.empty:
+                    # grab the closest data to the interval
+                    time_before = before.iloc[-1]
+                    time_after = after.iloc[0]
+
+                    # calculate the estimated kwh
+                    # get the slode to 4 decimal places
+                    reading_diff = time_after['kwh'] - time_before['kwh']
+
+                    if reading_diff == 0:
+                        estimated_kwh = time_before['kwh']
+                    else:
+                        time_diff = (time_after['datetime'] - time_before['datetime']).total_seconds()
+                        slope = round(reading_diff / time_diff, 4)
+                        sec_before_interval = (interval - time_before['datetime']).total_seconds()
+                        estimated_kwh = time_before['kwh'] + (slope * sec_before_interval)
+
+                    # create interpolated row
+                    new_row = time_before.copy()
+                    new_row['datetime'] = interval
+                    new_row['kwh'] = estimated_kwh
+                    new_row['interval_offset'] = 0
+                    new_row['is_exact'] = True
+                    new_row['interpolated'] = True
+
+                    # add new interpolated row to list
+                    interpolated_rows.append(new_row)
+
+        # add this meter's interpolated rows to the overall list
+        all_interpolated_rows.extend(interpolated_rows)
+
+    # combine interpolated data with dataframe
+    if all_interpolated_rows:
+        df = pd.concat([df, pd.DataFrame(interpolated_rows)], ignore_index=True)
+
+    df = df.drop(columns=['interval_15min', 'interval_offset'])
+
+    # resort the data to be in order of datetime
+    df = df.sort_values(by=['meter_name', 'datetime']).reset_index(drop=True)
+
+    return df
+
+
 
