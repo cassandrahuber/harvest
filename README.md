@@ -16,6 +16,3 @@ Can recreate my same Python setup with command in terminal:
 conda env create -f environment.yml
 conda activate meter_data
 ```
-
-`conda env create -f environment.yml`
-`conda activate meter_data`
