@@ -116,21 +116,24 @@ def concat_meter_dfs(meter_dfs):
 
     return combined_df
         
-def process_kwh(input_df):
+def process_kwh(data_path):
     """
     Interpolate kwh readings to exact 15 minute intervals. Contains boolean 'interpolated'
     column to indicate if the row was interpolated or not, and boolean 'is_exact' column
     to indicate if row is at an exact 15 minute interval.
 
     Parameters:
-        input_df (dataframe): Dataframe containing meter data with kwh readings.
+        data_path (str): Path to the CSV file containing meter orignial data.
     
     Returns:
         dataframe: Dataframe with interpolated kwh readings at exact 15 minute intervals.
     """
+    # load raw data from csv
+    df = pd.read_csv(data_path, encoding='utf-8')
+
     # drop the 3_phase_watt_total column as its not needed for kwh interpolation
     if '3_phase_watt_total' in df.columns:
-        df = input_df.drop('3_phase_watt_total', axis=1, inplace=True)
+        df = df.drop('3_phase_watt_total', axis=1, inplace=True)
 
     # convert datatetime column to a datetime type
     df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d %H:%M:%S')
