@@ -4,12 +4,12 @@
 
 1. [harvest_orig.ipynb](notebooks/harvest_orig.ipynb)
     * Preprocessing data
-2a. [harvest_kwh.ipynb](notebooks/harvest_kwh.ipynb)
+2. [harvest_kwh.ipynb](notebooks/harvest_kwh.ipynb)
     * Processing kwh
     * Other
-2b. [harvest_kw.ipynb](notebooks/harvest_kw.ipynb)
+3. [harvest_kw.ipynb](notebooks/harvest_kw.ipynb)
     * Processing kw
-3. [harvest_comparison_aurora_kw.ipynb](notebooks/harvest_comparison_aurora_kw.ipynb)
+4. [harvest_comparison_aurora_kw.ipynb](notebooks/harvest_comparison_aurora_kw.ipynb)
     * Comparing Harvest vs. Aurora
 * Self defined modules:
     * harvest_kwh.py
