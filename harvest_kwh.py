@@ -133,7 +133,7 @@ def process_kwh(data_path):
 
     # drop the 3_phase_watt_total column as its not needed for kwh interpolation
     if '3_phase_watt_total' in df.columns:
-        df = df.drop('3_phase_watt_total', axis=1, inplace=True)
+        df.drop('3_phase_watt_total', axis=1, inplace=True)
 
     # convert datatetime column to a datetime type
     df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d %H:%M:%S')
