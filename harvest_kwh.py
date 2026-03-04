@@ -157,11 +157,30 @@ def process_kwh(data_path):
             exact_match = meter_group[meter_group['datetime'] == interval]
             
             if not exact_match.empty:
+                # real reading exists at this exact interval
                 row = exact_match.iloc[0].copy()
                 row['is_exact'] = True
                 row['interpolated'] = False
                 all_rows.append(row)
             else:
+                # only look within 15 minutes either side
+                window = pd.Timedelta(mintues=15) d
+
+                before_rows = meter_group[
+                    (meter_group['datetime'] < interval) & 
+                    (meter_group['datetime'] >= interval - window)
+                ]
+                after_rows = meter_group[
+                    (meter_group['datetime'] > interval) & 
+                    (meter_group['datetime'] <= interval + window)
+                ]
+
+                # only interpolate if we have readings on BOTH sides
+                if not before_rows.empty and not after_rows.empty:
+                    
+                else:
+                    # no close enough readings on one or both sides — skip this interval
+                    pass
                 
          
     # create column that contains the closest interval for each timestamp (contains ymd hms, using timedelta)
