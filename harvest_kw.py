@@ -17,7 +17,8 @@ def load_data(data_path, info_path):
     info_df = pd.read_csv(info_path, encoding='utf-8')
 
     # remove total watt hour column, it is not relevant to these calculations
-    df.drop('total_watt_hour', axis=1, inplace=True)
+    if 'total_watt_hour' in df.columns:
+        df.drop('total_watt_hour', axis=1, inplace=True)
 
     df['datetime'] = pd.to_datetime(df['datetime'])
     df = df.sort_values(by=['meter_name', 'datetime'])
